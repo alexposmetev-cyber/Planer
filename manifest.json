@@ -1,0 +1,11 @@
+{
+  "name": "Планировщик накоплений",
+  "short_name": "Накопления",
+  "description": "Расчёт и учёт отложений по целям",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#0f1419",
+  "theme_color": "#1a2332",
+  "lang": "ru",
+  "orientation": "any"
+}
