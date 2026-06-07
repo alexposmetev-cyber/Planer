@@ -31,7 +31,7 @@ python -m http.server 8080
 ## Google — кратко
 
 1. Таблица → Расширения → Apps Script → вставить `google-apps-script/Code.gs`
-2. `SPREADSHEET_ID` + `SECRET_TOKEN` в Code.gs
+2. Секреты в **Script Properties** (`setupSecrets`): `SPREADSHEET_ID`, `SECRET_TOKEN`, `SYNC_PIN`
 3. Развернуть веб-приложение: **Я** + доступ **Все** → URL `/exec`
 4. URL и токен в планировщере → **Проверить подключение**
 

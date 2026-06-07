@@ -76,10 +76,20 @@
     .tab { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); padding: 6px 12px; border-radius: 8px; cursor: pointer; font-size: 0.82rem; }
     .tab.active { background: var(--accent); color: #061018; border-color: var(--accent); font-weight: 600; }
     .hidden { display: none !important; }
-    .scenario-chip { display: inline-block; padding: 2px 8px; border-radius: 999px; font-size: 0.75rem; margin-left: 6px; background: rgba(61,214,140,.15); color: var(--accent2); }
-    .goal-block { border: 1px solid var(--border); border-radius: 10px; padding: 12px; margin-bottom: 12px; background: var(--surface2); }
-    .goal-block .goal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 8px; }
+    .goal-block { border: 1px solid var(--border); border-radius: 10px; padding: 14px; margin-bottom: 12px; background: var(--surface2); }
+    .goal-block .goal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 8px; }
     .goal-block .goal-header input[type="text"] { font-weight: 600; font-size: 0.95rem; flex: 1; }
+    .goal-params { display: grid; grid-template-columns: minmax(0, 1fr) 88px minmax(0, 1fr); gap: 10px 14px; align-items: end; margin-bottom: 12px; }
+    .goal-field label { display: block; font-size: 0.78rem; color: var(--muted); margin-bottom: 4px; }
+    .goal-field input { width: 100%; }
+    .goal-saved-value { font-size: 1.05rem; font-weight: 700; color: var(--accent2); line-height: 1.3; font-variant-numeric: tabular-nums; }
+    .goal-saved-hint { display: block; font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .goal-plan-section { border-top: 1px solid var(--border); padding-top: 10px; }
+    .goal-plan-section > .goal-field label { margin-bottom: 6px; }
+    @media (max-width: 720px) {
+      .goal-params { grid-template-columns: 1fr 88px; }
+      .goal-field-saved { grid-column: 1 / -1; }
+    }
     .inline-check { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--muted); margin-right: 12px; }
     .inline-check label { margin: 0; display: flex; align-items: center; gap: 4px; color: var(--text); }
     .status-ok { color: var(--accent2); }
@@ -97,7 +107,6 @@
     .plan-inline input[type="month"] { width: 150px; }
     .plan-inline .plan-val { display: inline-flex; align-items: center; gap: 6px; }
     .plan-inline .plan-val.hidden { display: none; }
-    .saved-readonly { font-size: 0.84rem; color: var(--accent2); padding: 6px 0; }
     .calc-panel { background: var(--surface2); border-radius: 10px; padding: 14px; margin-top: 14px; }
     .calc-panel h3 { color: var(--text); margin-bottom: 10px; }
     .alloc-row { display: grid; grid-template-columns: 1fr 120px; gap: 8px; align-items: center; margin-bottom: 6px; font-size: 0.86rem; }
@@ -209,10 +218,6 @@
         <button type="button" class="secondary danger" id="clearLedger">Очистить журнал</button>
       </div>
     </div>
-    <div class="card" style="margin-top:16px">
-      <h2>Сценарии «что если»</h2>
-      <div class="grid grid-3" id="scenarios"></div>
-    </div>
   </section>
 
   <section id="tab-income" class="hidden">
@@ -281,7 +286,7 @@
       </div>
       <div class="card">
         <h2>Фиксированные отчисления</h2>
-        <p class="subtitle" style="margin-bottom:10px">Для режима «Фиксированные суммы» на вкладке «Основное».</p>
+        <p class="subtitle" style="margin-bottom:10px">Связано с «₽/мес» в плане накопления слева — значения синхронизируются. Используется в режиме «Фиксированные суммы» на вкладке «Основное».</p>
         <div id="fixed-allocation-fields"></div>
         <div class="note">«Накоплено» обновляется автоматически при нажатии «Внести в таблицу» на главной. Позже — синхронизация из Google Таблицы.</div>
       </div>
@@ -302,12 +307,13 @@
   </section>
 
   <section id="tab-google" class="hidden">
-    <div class="grid grid-2">
       <div class="card">
         <h2>Подключение Google Таблицы</h2>
         <div class="field"><label>URL веб-приложения Apps Script</label><input type="url" id="gsWebAppUrl" placeholder="https://script.google.com/macros/s/.../exec"><span style="font-size:0.78rem;color:var(--muted);display:block;margin-top:4px">Не ссылка на таблицу! Берётся из Apps Script → <strong>Развернуть → Веб-приложение → URL</strong> (заканчивается на <code>/exec</code>).</span></div>
-        <div class="field"><label>Секретный токен</label><input type="text" id="gsToken" placeholder="finance2026"><span style="font-size:0.78rem;color:var(--muted);display:block;margin-top:4px">Тот же текст, что внутри <code>SECRET_TOKEN = '…'</code> в Code.gs — <strong>без кавычек</strong>. После смены в Google — новое развёртывание.</span></div>
-        <div class="field"><label>ID таблицы (справочно)</label><input type="text" id="gsSpreadsheetId" placeholder="19Z93po1nU1W4VVfstmLR-RsQU5g6ePqjbfiuQCRl2kM"><span style="font-size:0.78rem;color:var(--muted);display:block;margin-top:4px">Скрипт читает ID из <code>SPREADSHEET_ID</code> в Code.gs — только длинная строка букв/цифр, <strong>без</strong> <code>d/</code>, <code>/edit</code> и <code>gid</code>.</span></div>
+        <div class="field"><label>Секретный токен</label><input type="password" id="gsToken" placeholder="длинный случайный ключ" autocomplete="off"><span style="font-size:0.78rem;color:var(--muted);display:block;margin-top:4px">Храните в <strong>Script Properties</strong> в Google (не в GitHub). Совпадает с <code>SECRET_TOKEN</code> в Apps Script.</span></div>
+        <div class="field"><label>PIN синхронизации</label><input type="password" id="gsSyncPin" placeholder="если задан SYNC_PIN" autocomplete="off"><span style="font-size:0.78rem;color:var(--muted);display:block;margin-top:4px">Второй пароль — только у вас в планировщике и в Script Properties (<code>SYNC_PIN</code>). Без PIN посторонний с сайтом в таблицу не попадёт.</span></div>
+        <div class="field"><label>ID таблицы (справочно)</label><input type="text" id="gsSpreadsheetId" placeholder="19Z93po1nU1W4VVfstmLR-RsQU5g6ePqjbfiuQCRl2kM"><span style="font-size:0.78rem;color:var(--muted);display:block;margin-top:4px">В скрипте — <code>SPREADSHEET_ID</code> в Script Properties.</span></div>
+        <div class="note" style="margin-top:8px"><strong>Безопасность:</strong> публичный сайт ≠ доступ к вашей таблице. Нужны секретный URL веб-приложения + токен + PIN. Не публикуйте их и не коммитьте в GitHub. Таблицу в Google не открывайте «всем по ссылке».</div>
         <div class="btn-row">
           <button type="button" class="secondary" id="testGoogle">Проверить подключение</button>
           <button type="button" id="syncToGoogle">Выгрузить в Google</button>
@@ -317,15 +323,6 @@
         <div class="note hidden" id="gs-file-warning">Открыто как файл (<code>file://</code>) — синхронизация с Google может не работать. Запустите в папке проекта: <code>python -m http.server 8080</code> и откройте <code>http://localhost:8080</code>.</div>
         <div class="note">Развёртывание: <strong>Выполнять как: Я</strong>, доступ <strong>Все (Anyone)</strong>, URL с <code>/exec</code>. Подробно — в инструкции ниже.</div>
       </div>
-      <div class="card">
-        <h2>JSON (ручной обмен)</h2>
-        <div class="btn-row">
-          <button type="button" class="secondary" id="copyJson">Скопировать JSON</button>
-          <button type="button" class="secondary" id="importJson">Импортировать JSON</button>
-        </div>
-        <textarea id="jsonPreview" readonly></textarea>
-      </div>
-    </div>
     <div class="card" style="margin-top:16px">
       <h2>Доступ из интернета и материалы</h2>
       <p class="subtitle" style="margin-bottom:12px">Чтобы открывать планировщик с телефона и ноутбука из любой точки мира — выложите папку проекта на GitHub Pages, Netlify или Cloudflare Pages. Синхронизация с Google работает только по <code>https://</code>, не через двойной клик по файлу.</p>
@@ -361,8 +358,9 @@
       { id: 'gifts', name: 'Подарки, дни рождения', value: 4000 },
       { id: 'lunch', name: 'Обеды на работе', value: 2000 },
       { id: 'badHabits', name: 'Сигареты, алкоголь, кофе', value: 2000 },
-      { id: 'vacation_exp', name: 'Отпуск (ежемесячно)', value: 8000 },
-      { id: 'repair_exp', name: 'Ремонт / мебель (ежемесячно)', value: 8000 },
+      { id: 'vacation_exp', name: 'Отпуск', value: 8000 },
+      { id: 'repair_exp', name: 'Ремонт', value: 4000 },
+      { id: 'furniture_exp', name: 'Мебель', value: 4000 },
       { id: 'mortgagePay', name: 'ИПОТЕКА (текущий платёж)', value: 30000 },
     ];
 
@@ -414,11 +412,36 @@
       return result;
     }
 
+    function normalizeExpenseCategories(cats) {
+      const result = (cats || []).map(c => ({ ...c }));
+      const vacation = result.find(c => c.id === 'vacation_exp');
+      if (vacation) vacation.name = 'Отпуск';
+      const repair = result.find(c => c.id === 'repair_exp');
+      if (repair && /мебель|ежемесячно/i.test(repair.name)) {
+        repair.name = 'Ремонт';
+        if (!result.find(c => c.id === 'furniture_exp')) {
+          const half = Math.round((repair.value || 0) / 2);
+          result.push({ id: 'furniture_exp', name: 'Мебель', value: (repair.value || 0) - half });
+          repair.value = half;
+        }
+      }
+      return result;
+    }
+
     function migrateState(raw) {
       if (raw?.version === 5) {
         if (!raw.workingMonth) raw.workingMonth = calendarMonthKey(new Date());
         if (!raw.incomeSources?.length) raw.incomeSources = DEFAULT_INCOME_SOURCES.map(s => ({ ...s }));
         raw.incomeByMonth = migrateIncomeByMonth(raw.incomeByMonth || {}, raw.incomeSources);
+        raw.expenseCategories = normalizeExpenseCategories(raw.expenseCategories);
+        if (!raw.fixed) raw.fixed = {};
+        for (const g of raw.goals || []) {
+          const monthly = g.monthlyAmount || 0;
+          const fixed = raw.fixed[g.id];
+          const v = monthly > 0 ? monthly : (fixed || 0);
+          g.monthlyAmount = v;
+          raw.fixed[g.id] = v;
+        }
         return raw;
       }
 
@@ -428,6 +451,14 @@
         raw.incomeSources = incomeSources;
         raw.incomeByMonth = migrateIncomeByMonth(raw.incomeByMonth || {}, incomeSources);
         raw.workingMonth = raw.workingMonth || calendarMonthKey(new Date());
+        if (!raw.fixed) raw.fixed = {};
+        for (const g of raw.goals || []) {
+          const monthly = g.monthlyAmount || 0;
+          const fixed = raw.fixed[g.id];
+          const v = monthly > 0 ? monthly : (fixed || 0);
+          g.monthlyAmount = v;
+          raw.fixed[g.id] = v;
+        }
         delete raw.defaultSalary;
         return raw;
       }
@@ -435,10 +466,14 @@
       let cats = raw?.expenseCategories || DEFAULT_CATEGORIES.map(c => ({ ...c }));
       const savings = raw?.expenseSavings || {};
       if (savings.vacation && !cats.find(c => c.id === 'vacation_exp')) {
-        cats.push({ id: 'vacation_exp', name: 'Отпуск (ежемесячно)', value: savings.vacation });
+        cats.push({ id: 'vacation_exp', name: 'Отпуск', value: savings.vacation });
       }
       if (savings.repair && !cats.find(c => c.id === 'repair_exp')) {
-        cats.push({ id: 'repair_exp', name: 'Ремонт / мебель (ежемесячно)', value: savings.repair });
+        const half = Math.round(savings.repair / 2);
+        cats.push({ id: 'repair_exp', name: 'Ремонт', value: half });
+        if (!cats.find(c => c.id === 'furniture_exp')) {
+          cats.push({ id: 'furniture_exp', name: 'Мебель', value: savings.repair - half });
+        }
       }
 
       let goals = raw?.goals;
@@ -457,7 +492,7 @@
 
       const now = new Date();
       const incomeSources = DEFAULT_INCOME_SOURCES.map(s => ({ ...s }));
-      return {
+      const migrated = {
         version: 5,
         workingMonth: raw?.workingMonth || calendarMonthKey(now),
         incomeSources,
@@ -473,6 +508,14 @@
         settings: raw?.settings || { allocationMode: 'priority', savePercent: 30 },
         google: raw?.google || { webAppUrl: '', token: '', spreadsheetId: '' },
       };
+      for (const g of migrated.goals) {
+        const monthly = g.monthlyAmount || 0;
+        const fixed = migrated.fixed[g.id];
+        const v = monthly > 0 ? monthly : (fixed || 0);
+        g.monthlyAmount = v;
+        migrated.fixed[g.id] = v;
+      }
+      return migrated;
     }
 
     function loadState() {
@@ -680,6 +723,41 @@
       return { need, months: monthly > 0 ? need / monthly : Infinity, monthly, mode: 'monthly' };
     }
 
+    function formatGoalPlanHint(g) {
+      const plan = calcGoalPlan(g);
+      return g.planMode === 'date'
+        ? `→ Нужно: <strong>${fmt(plan.monthly)}</strong>/мес`
+        : `→ Срок: <strong>${fmtMonths(plan.months)}</strong>`;
+    }
+
+    function updateGoalPlanHint(goalId) {
+      const g = getGoalById(goalId);
+      if (!g) return;
+      const hint = document.querySelector(`[data-g-plan-hint="${goalId}"]`);
+      if (hint) hint.innerHTML = formatGoalPlanHint(g);
+    }
+
+    function updateGoalSavedDisplay(goalId) {
+      const g = getGoalById(goalId);
+      if (!g) return;
+      const el = document.querySelector(`[data-g-saved="${goalId}"]`);
+      if (el) el.textContent = fmt(g.saved || 0);
+    }
+
+    /** ₽/мес в плане цели ↔ фиксированные отчисления справа */
+    function syncMonthlyFixed(goalId, value) {
+      const g = getGoalById(goalId);
+      if (!g) return;
+      const num = Math.max(0, parseFloat(value) || 0);
+      g.monthlyAmount = num;
+      state.fixed[goalId] = num;
+      const monthlyInp = document.querySelector(`[data-g-monthly="${goalId}"]`);
+      const fixedInp = document.querySelector(`[data-fixed="${goalId}"]`);
+      if (monthlyInp && monthlyInp !== document.activeElement) monthlyInp.value = num;
+      if (fixedInp && fixedInp !== document.activeElement) fixedInp.value = num;
+      updateGoalPlanHint(goalId);
+    }
+
     function distributeFree(free, mode, percent) {
       const alloc = {};
       state.goals.forEach(g => { alloc[g.id] = 0; });
@@ -803,7 +881,7 @@
         state.savingsLedger.sort((a, b) => a.monthKey.localeCompare(b.monthKey));
       }
       recalcSavedFromLedger();
-      buildGoalFields();
+      for (const g of state.goals) updateGoalSavedDisplay(g.id);
       renderLedger();
       renderMainFromCalc(state.lastCalc.income, state.lastCalc.expenses, state.lastCalc.free, pendingAlloc, state.lastCalc.reserve, monthVal, 'table');
       updateWorkingMonthStatus();
@@ -941,41 +1019,10 @@
         renderMainEmpty();
       }
 
-      renderScenarios();
       renderForecast(simulateMonths(24));
       renderExpenseHistory();
       renderLedger();
-      updateJsonPreview();
       saveState();
-    }
-
-    function renderScenarios() {
-      const scEl = document.getElementById('scenarios');
-      if (!scEl) return;
-      const curRow = getIncomeRowForMonthKey(getWorkingMonthKey());
-      const curTotal = sumIncomeRow(curRow);
-      const expenses = getExpensesForMonthKey(getWorkingMonthKey());
-      const mode = state.settings.allocationMode;
-      const src0 = state.incomeSources[0];
-      const src1 = state.incomeSources[1];
-      const scenarios = [
-        { title: src0 ? `Только «${src0.name}»` : 'Только основной', row: { ...curRow, ...(src0 ? Object.fromEntries(state.incomeSources.filter(s => s.id !== src0.id).map(s => [s.id, 0])) : {}) } },
-        { title: 'Все источники (текущий)', row: { ...curRow } },
-        ...(src1 ? [{ title: `${src1.name} +10%`, row: { ...curRow, [src1.id]: (curRow[src1.id] || 0) * 1.1 } }] : []),
-        { title: 'Экономия 10 тыс.', adjust: -10000 },
-      ];
-      scEl.innerHTML = scenarios.map(s => {
-        const inc = s.adjust ? curTotal : sumIncomeRow(s.row);
-        const exp = s.adjust ? expenses - 10000 : expenses;
-        const fr = inc - exp;
-        const { allocations } = distributeFree(fr, mode, state.settings.savePercent);
-        const top = [...state.goals].sort((a, b) => a.priority - b.priority)[0];
-        const mM = top && allocations[top.id] > 0 ? (top.target - (top.saved || 0)) / allocations[top.id] : Infinity;
-        return `<div class="card"><h3>${s.title}</h3>
-          <div style="font-size:0.85rem;color:var(--muted)">Свободно: ${fmt(fr)}</div>
-          ${top ? `<div style="margin-top:8px;font-size:0.85rem">${top.name}: ${fmtMonths(mM)}<span class="scenario-chip">${fmt(allocations[top.id])}/мес</span></div>` : ''}
-        </div>`;
-      }).join('');
     }
 
     function renderForecast(sim) {
@@ -1020,32 +1067,43 @@
       const el = document.getElementById('goal-fields');
       if (!el) return;
       el.innerHTML = state.goals.map(g => {
-        const plan = calcGoalPlan(g);
-        const planHint = g.planMode === 'date'
-          ? `→ Нужно: <strong>${fmt(plan.monthly)}</strong>/мес`
-          : `→ Срок: <strong>${fmtMonths(plan.months)}</strong>`;
+        const planHint = formatGoalPlanHint(g);
         return `<div class="goal-block">
           <div class="goal-header">
             <input type="text" data-g-name="${g.id}" value="${g.name}">
             <input type="color" data-g-color="${g.id}" value="${g.color}" style="width:40px;padding:2px;flex:none">
             <button type="button" class="secondary icon danger" data-g-del="${g.id}">×</button>
           </div>
-          <div class="field-row cols-3">
-            <div class="name">Сумма цели</div>
-            <input type="number" data-g-target="${g.id}" value="${g.target}" step="1000">
-            <input type="number" data-g-priority="${g.id}" value="${g.priority}" min="1" max="99" title="Приоритет">
+          <div class="goal-params">
+            <div class="goal-field">
+              <label>Сумма цели</label>
+              <input type="number" data-g-target="${g.id}" value="${g.target}" step="1000">
+            </div>
+            <div class="goal-field">
+              <label>Приоритет</label>
+              <input type="number" data-g-priority="${g.id}" value="${g.priority}" min="1" max="99">
+            </div>
+            <div class="goal-field goal-field-saved">
+              <label>Накоплено</label>
+              <div class="goal-saved-value" data-g-saved="${g.id}">${fmt(g.saved || 0)}</div>
+              <span class="goal-saved-hint">из журнала отложений</span>
+            </div>
           </div>
-          <div class="saved-readonly">Накоплено: <strong>${fmt(g.saved || 0)}</strong> (из журнала отложений)</div>
-          <div class="plan-inline">
-            <label><input type="radio" name="plan-${g.id}" data-g-planmode="${g.id}" value="monthly" ${g.planMode==='monthly'?'checked':''}> ₽/мес</label>
-            <span class="plan-val ${g.planMode==='date'?'hidden':''}" data-g-monthly-wrap="${g.id}">
-              <input type="number" data-g-monthly="${g.id}" value="${g.monthlyAmount||0}" step="500">
-            </span>
-            <label><input type="radio" name="plan-${g.id}" data-g-planmode="${g.id}" value="date" ${g.planMode==='date'?'checked':''}> К дате</label>
-            <span class="plan-val ${g.planMode==='monthly'?'hidden':''}" data-g-date-wrap="${g.id}">
-              <input type="month" data-g-date="${g.id}" value="${g.targetDate||''}">
-            </span>
-            <span style="font-size:0.78rem;color:var(--muted)">${planHint}</span>
+          <div class="goal-plan-section">
+            <div class="goal-field">
+              <label>План накопления</label>
+              <div class="plan-inline">
+                <label><input type="radio" name="plan-${g.id}" data-g-planmode="${g.id}" value="monthly" ${g.planMode==='monthly'?'checked':''}> ₽/мес</label>
+                <span class="plan-val ${g.planMode==='date'?'hidden':''}" data-g-monthly-wrap="${g.id}">
+                  <input type="number" data-g-monthly="${g.id}" value="${g.monthlyAmount||0}" step="500">
+                </span>
+                <label><input type="radio" name="plan-${g.id}" data-g-planmode="${g.id}" value="date" ${g.planMode==='date'?'checked':''}> К дате</label>
+                <span class="plan-val ${g.planMode==='monthly'?'hidden':''}" data-g-date-wrap="${g.id}">
+                  <input type="month" data-g-date="${g.id}" value="${g.targetDate||''}">
+                </span>
+                <span data-g-plan-hint="${g.id}" style="font-size:0.78rem;color:var(--muted)">${planHint}</span>
+              </div>
+            </div>
           </div>
         </div>`;
       }).join('');
@@ -1053,11 +1111,24 @@
       const bind = (sel, fn) => el.querySelectorAll(sel).forEach(inp => inp.addEventListener('input', () => fn(inp)));
       const bindCh = (sel, fn) => el.querySelectorAll(sel).forEach(inp => inp.addEventListener('change', () => fn(inp)));
 
-      bind('[data-g-name]', i => { getGoalById(i.dataset.gName).name = i.value; render(); });
-      bind('[data-g-target]', i => { getGoalById(i.dataset.gTarget).target = parseFloat(i.value)||0; buildGoalFields(); render(); });
-      bind('[data-g-priority]', i => { getGoalById(i.dataset.gPriority).priority = parseInt(i.value)||1; render(); });
-      bind('[data-g-monthly]', i => { getGoalById(i.dataset.gMonthly).monthlyAmount = parseFloat(i.value)||0; buildGoalFields(); render(); });
-      bindCh('[data-g-date]', i => { getGoalById(i.dataset.gDate).targetDate = i.value; buildGoalFields(); render(); });
+      bind('[data-g-name]', i => {
+        getGoalById(i.dataset.gName).name = i.value;
+        const fixedName = document.querySelector(`[data-fixed-name="${i.dataset.gName}"]`);
+        if (fixedName) fixedName.textContent = i.value;
+        saveState();
+      });
+      bind('[data-g-target]', i => {
+        getGoalById(i.dataset.gTarget).target = parseFloat(i.value) || 0;
+        updateGoalPlanHint(i.dataset.gTarget);
+        saveState();
+      });
+      bind('[data-g-priority]', i => { getGoalById(i.dataset.gPriority).priority = parseInt(i.value) || 1; saveState(); });
+      bind('[data-g-monthly]', i => { syncMonthlyFixed(i.dataset.gMonthly, i.value); saveState(); });
+      bindCh('[data-g-date]', i => {
+        getGoalById(i.dataset.gDate).targetDate = i.value;
+        updateGoalPlanHint(i.dataset.gDate);
+        saveState();
+      });
       bindCh('[data-g-color]', i => { getGoalById(i.dataset.gColor).color = i.value; render(); });
       bindCh('[data-g-planmode]', i => {
         const g = getGoalById(i.dataset.gPlanmode);
@@ -1081,12 +1152,12 @@
       if (!fixEl) return;
       fixEl.innerHTML = state.goals.map(g => `
         <div class="field-row" style="grid-template-columns:1fr 110px">
-          <div class="name">${g.name}</div>
+          <div class="name" data-fixed-name="${g.id}">${g.name}</div>
           <input type="number" data-fixed="${g.id}" value="${state.fixed[g.id] ?? g.monthlyAmount ?? 0}" step="500">
         </div>`).join('');
       fixEl.querySelectorAll('[data-fixed]').forEach(inp => inp.addEventListener('input', () => {
-        state.fixed[inp.dataset.fixed] = parseFloat(inp.value) || 0;
-        render();
+        syncMonthlyFixed(inp.dataset.fixed, inp.value);
+        saveState();
       }));
     }
 
@@ -1236,11 +1307,6 @@
       render();
     }
 
-    function updateJsonPreview() {
-      const el = document.getElementById('jsonPreview');
-      if (el) el.value = JSON.stringify(exportPayload(), null, 2);
-    }
-
     function resolveAssetUrl(relativePath) {
       return new URL(relativePath, location.href).href;
     }
@@ -1349,18 +1415,43 @@
     }
 
     /** Обход CORS: форма в скрытый iframe (ответ прочитать нельзя, но запись в таблицу проходит). */
-    function postToGoogleViaForm(url, token, bodyObj) {
+    function getGoogleCreds() {
+      return {
+        url: document.getElementById('gsWebAppUrl').value.trim(),
+        token: document.getElementById('gsToken').value.trim(),
+        pin: document.getElementById('gsSyncPin').value.trim(),
+        spreadsheetId: document.getElementById('gsSpreadsheetId').value.trim(),
+      };
+    }
+
+    function persistGoogleCreds(creds) {
+      state.google = {
+        webAppUrl: normalizeGsUrl(creds.url),
+        token: creds.token,
+        syncPin: creds.pin,
+        spreadsheetId: creds.spreadsheetId,
+      };
+      saveState();
+    }
+
+    function authQuery(creds) {
+      let q = `token=${encodeURIComponent(creds.token)}`;
+      if (creds.pin) q += `&pin=${encodeURIComponent(creds.pin)}`;
+      return q;
+    }
+
+    function postToGoogleViaForm(url, token, pin, bodyObj) {
       return new Promise((resolve) => {
         ensureGsProxyFrame();
         const form = document.createElement('form');
         form.method = 'POST';
-        form.action = `${normalizeGsUrl(url)}?token=${encodeURIComponent(token)}`;
+        form.action = `${normalizeGsUrl(url)}?${authQuery({ token, pin })}`;
         form.target = 'gs-proxy-frame';
         form.style.display = 'none';
         const inp = document.createElement('input');
         inp.type = 'hidden';
         inp.name = 'payload';
-        inp.value = JSON.stringify(bodyObj);
+        inp.value = JSON.stringify({ ...bodyObj, pin: pin || undefined });
         form.appendChild(inp);
         document.body.appendChild(form);
         form.submit();
@@ -1372,11 +1463,11 @@
     }
 
     /** POST: form-urlencoded (без CORS preflight) + fallback через скрытую форму. */
-    async function postToGoogle(url, token, bodyObj) {
+    async function postToGoogle(url, token, pin, bodyObj) {
       const base = normalizeGsUrl(url);
-      const target = `${base}?token=${encodeURIComponent(token)}`;
+      const target = `${base}?${authQuery({ token, pin })}`;
       const form = new URLSearchParams();
-      form.set('payload', JSON.stringify(bodyObj));
+      form.set('payload', JSON.stringify({ ...bodyObj, pin: pin || undefined }));
       try {
         const res = await fetch(target, {
           method: 'POST',
@@ -1390,42 +1481,39 @@
         return data;
       } catch (e) {
         if (e.message === 'Failed to fetch') {
-          return postToGoogleViaForm(url, token, bodyObj);
+          return postToGoogleViaForm(url, token, pin, bodyObj);
         }
         throw e;
       }
     }
 
-    async function getFromGoogle(url, token, params = {}) {
+    async function getFromGoogle(url, token, pin, params = {}) {
       const base = normalizeGsUrl(url);
       const qs = new URLSearchParams({ token, ...params });
-      const res = await fetch(`${base}?${qs}`, { method: 'GET', mode: 'cors', redirect: 'follow', credentials: 'omit' });
-      const data = await readGoogleJson(res);
-      if (data.error) throw new Error(data.error);
-      return data;
+      if (pin) qs.set('pin', pin);
+      return fetch(`${base}?${qs}`, { method: 'GET', mode: 'cors', redirect: 'follow', credentials: 'omit' });
     }
 
     async function testGoogleConnection() {
-      const url = document.getElementById('gsWebAppUrl').value.trim();
-      const token = document.getElementById('gsToken').value.trim();
+      const creds = getGoogleCreds();
       const status = document.getElementById('sync-status');
-      const urlErr = validateGsUrl(url);
+      const urlErr = validateGsUrl(creds.url);
       if (urlErr) {
         status.className = 'sync-status err';
         status.textContent = urlErr;
         return;
       }
-      if (!token) {
+      if (!creds.token) {
         status.className = 'sync-status err';
         status.textContent = 'Укажите секретный токен';
         return;
       }
-      state.google = { webAppUrl: normalizeGsUrl(url), token, spreadsheetId: document.getElementById('gsSpreadsheetId').value.trim() };
-      saveState();
+      persistGoogleCreds(creds);
       try {
         status.className = 'sync-status';
         status.textContent = 'Проверка GET…';
-        const data = await getFromGoogle(url, token, { action: 'ping' });
+        const res = await getFromGoogle(creds.url, creds.token, creds.pin, { action: 'ping' });
+        const data = await readGoogleJson(res);
         status.className = 'sync-status ok';
         status.textContent = 'Подключение OK: ' + (data.message || 'pong');
       } catch (e) {
@@ -1435,16 +1523,15 @@
     }
 
     async function syncToGoogle() {
-      const url = document.getElementById('gsWebAppUrl').value.trim();
-      const token = document.getElementById('gsToken').value.trim();
+      const creds = getGoogleCreds();
       const status = document.getElementById('sync-status');
-      const urlErr = validateGsUrl(url);
+      const urlErr = validateGsUrl(creds.url);
       if (urlErr) { status.className = 'sync-status err'; status.textContent = urlErr; return; }
-      if (!token) { status.className = 'sync-status err'; status.textContent = 'Укажите секретный токен'; return; }
-      state.google = { webAppUrl: normalizeGsUrl(url), token, spreadsheetId: document.getElementById('gsSpreadsheetId').value.trim() };
+      if (!creds.token) { status.className = 'sync-status err'; status.textContent = 'Укажите секретный токен'; return; }
+      persistGoogleCreds(creds);
       try {
         status.textContent = 'Выгрузка…';
-        const data = await postToGoogle(url, token, { token, action: 'import', data: exportPayload() });
+        const data = await postToGoogle(creds.url, creds.token, creds.pin, { token: creds.token, action: 'import', data: exportPayload() });
         status.className = 'sync-status ok';
         status.textContent = data.viaForm ? data.message : ('Выгружено: ' + (data.message || 'OK'));
       } catch (e) {
@@ -1455,13 +1542,14 @@
     }
 
     async function syncFromGoogle() {
-      const url = document.getElementById('gsWebAppUrl').value.trim();
-      const token = document.getElementById('gsToken').value.trim();
+      const creds = getGoogleCreds();
       const status = document.getElementById('sync-status');
-      if (!url || !token) return;
+      if (!creds.url || !creds.token) return;
+      persistGoogleCreds(creds);
       try {
         status.textContent = 'Загрузка…';
-        const data = await getFromGoogle(url, token, { action: 'export' });
+        const res = await getFromGoogle(creds.url, creds.token, creds.pin, { action: 'export' });
+        const data = await readGoogleJson(res);
         status.className = 'sync-status ok';
         status.textContent = 'Данные получены (см. консоль). Импорт «Накоплено» — в следующей версии.';
         console.log(data);
@@ -1484,12 +1572,12 @@
     }
 
     async function syncMonthToGoogle() {
-      const url = document.getElementById('gsWebAppUrl').value.trim();
-      const token = document.getElementById('gsToken').value.trim();
-      if (!url || !token) {
-        alert('Настройте URL и токен на вкладке «Google Таблицы»');
+      const creds = getGoogleCreds();
+      if (!creds.url || !creds.token) {
+        alert('Настройте URL, токен и PIN на вкладке «Google Таблицы»');
         return;
       }
+      persistGoogleCreds(creds);
       const monthKey = getWorkingMonthKey();
       saveQuickInputToMonth(monthKey);
       const incomeRow = getIncomeRowForMonthKey(monthKey);
@@ -1511,7 +1599,7 @@
       };
       try {
         setSyncStatus(`Сохранение ${payload.label}…`);
-        const data = await postToGoogle(url, token, { token, action: 'syncMonth', data: payload });
+        const data = await postToGoogle(creds.url, creds.token, creds.pin, { token: creds.token, action: 'syncMonth', data: payload });
         if (data.viaForm) {
           setSyncStatus(data.message, true);
         } else {
@@ -1537,6 +1625,7 @@
       document.getElementById('savePercent').value = state.settings.savePercent;
       document.getElementById('gsWebAppUrl').value = state.google?.webAppUrl || '';
       document.getElementById('gsToken').value = state.google?.token || '';
+      document.getElementById('gsSyncPin').value = state.google?.syncPin || '';
       document.getElementById('gsSpreadsheetId').value = state.google?.spreadsheetId || '';
       const mk = getWorkingMonthKey();
       document.getElementById('expenseSaveMonth').value = mk;
@@ -1597,12 +1686,15 @@
       if (confirm('Удалить журнал отложений? Накоплено обнулится.')) {
         state.savingsLedger = [];
         recalcSavedFromLedger();
-        buildGoalFields(); render();
+        for (const g of state.goals) updateGoalSavedDisplay(g.id);
+        render();
       }
     });
     document.getElementById('addGoal').addEventListener('click', () => {
-      state.goals.push({ id: uid(), name: 'Новая цель', target: 100000, saved: 0, priority: state.goals.length + 1,
+      const id = uid();
+      state.goals.push({ id, name: 'Новая цель', target: 100000, saved: 0, priority: state.goals.length + 1,
         color: GOAL_COLORS[state.goals.length % GOAL_COLORS.length], planMode: 'monthly', monthlyAmount: 0, targetDate: '', yearly: false });
+      state.fixed[id] = 0;
       buildGoalFields(); render();
     });
     document.getElementById('exportCsv').addEventListener('click', exportCsv);
@@ -1625,23 +1717,6 @@
     document.getElementById('testGoogle').addEventListener('click', testGoogleConnection);
     document.getElementById('syncToGoogle').addEventListener('click', syncToGoogle);
     document.getElementById('syncFromGoogle').addEventListener('click', syncFromGoogle);
-    document.getElementById('copyJson').addEventListener('click', () => {
-      navigator.clipboard.writeText(JSON.stringify(exportPayload(), null, 2));
-      alert('JSON скопирован');
-    });
-    document.getElementById('importJson').addEventListener('click', () => {
-      const raw = prompt('Вставьте JSON:');
-      if (!raw) return;
-      try {
-        state = migrateState(JSON.parse(raw));
-        pendingAlloc = state.lastCalc?.allocations ? { ...state.lastCalc.allocations } : null;
-        initInputs();
-        buildExpenseFields(); buildGoalFields();
-        buildIncomeSourceFields(); buildFillIncomePanel(); buildIncomeTable(); buildQuickIncomeFields();
-        recalcSavedFromLedger();
-        render();
-      } catch (e) { alert('Ошибка: ' + e.message); }
-    });
     document.getElementById('resetAll').addEventListener('click', () => {
       if (confirm('Сбросить всё?')) {
         ['finance-planner-v5','finance-planner-v4','finance-planner-v3','finance-planner-v2','finance-planner-v1'].forEach(k => localStorage.removeItem(k));

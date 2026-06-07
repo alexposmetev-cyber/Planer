@@ -4,13 +4,27 @@
  * Установка:
  * 1. Создайте Google Таблицу.
  * 2. Расширения → Apps Script → вставьте этот файл.
- * 3. Замените SPREADSHEET_ID на ID вашей таблицы.
- * 4. Замените SECRET_TOKEN на свой секретный токен.
- * 5. Развернуть → Веб-приложение (доступ: все с ссылкой или только вы).
+ * 3. Секреты — в Script Properties (см. setupSecrets ниже), НЕ в публичном GitHub.
+ * 4. Развернуть → Веб-приложение (доступ: «Все» — обязательно для браузера; защита — токен + PIN).
+ *
+ * Один раз в Apps Script выполните setupSecrets() и удалите/закомментируйте вызов.
  */
 
-const SPREADSHEET_ID = 'ВСТАВЬТЕ_ID_ТАБЛИЦЫ';
-const SECRET_TOKEN = 'вставьте-свой-секретный-токен';
+/** Только запасной вариант. Реальные значения — в Script Properties. */
+const SPREADSHEET_ID = '';
+const SECRET_TOKEN = '';
+
+/**
+ * Один раз: Run → setupSecrets → разрешить доступ.
+ * Потом удалите тело или закомментируйте вызов setProperties с реальными значениями.
+ */
+function setupSecrets() {
+  PropertiesService.getScriptProperties().setProperties({
+    SPREADSHEET_ID: 'ВАШ_ID_ТАБЛИЦЫ',
+    SECRET_TOKEN: 'длинный-случайный-токен-32-символа',
+    SYNC_PIN: 'ваш-pin-5678',
+  });
+}
 
 const SHEETS = {
   MONTHLY: 'По_месяцам',
@@ -69,6 +83,23 @@ function doPost(e) {
   }
 }
 
+function getConfigValue(key, fallback) {
+  var fromProps = PropertiesService.getScriptProperties().getProperty(key);
+  if (fromProps && String(fromProps).trim()) return String(fromProps).trim();
+  if (fallback && String(fallback).trim()) return String(fallback).trim();
+  return '';
+}
+
+function extractPin(e) {
+  var pin = e.parameter && e.parameter.pin;
+  if (!pin) {
+    try {
+      pin = parsePostBody(e).pin;
+    } catch (ignore) {}
+  }
+  return pin ? String(pin).trim() : '';
+}
+
 function checkToken(e) {
   var token = e.parameter && e.parameter.token;
   if (!token) {
@@ -77,12 +108,23 @@ function checkToken(e) {
     } catch (ignore) {}
   }
   token = token ? String(token).trim() : '';
-  var expected = String(SECRET_TOKEN).trim();
+  var expected = getConfigValue('SECRET_TOKEN', SECRET_TOKEN);
+  if (!expected) {
+    throw new Error('SECRET_TOKEN не задан — выполните setupSecrets() или Project Settings → Script properties');
+  }
   if (!token) {
-    throw new Error('Missing token — добавьте ?token=... в URL или поле «Секретный токен» в планировщике');
+    throw new Error('Missing token — укажите секретный токен в планировщике');
   }
   if (token !== expected) {
-    throw new Error('Invalid token — значение в планировщике должно совпадать с текстом внутри SECRET_TOKEN в Code.gs (кавычки в Code.gs — только для кода, в планировщике кавычки не вводите)');
+    throw new Error('Invalid token');
+  }
+
+  var expectedPin = getConfigValue('SYNC_PIN', '');
+  if (expectedPin) {
+    var pin = extractPin(e);
+    if (!pin || pin !== expectedPin) {
+      throw new Error('Invalid PIN — укажите PIN синхронизации в планировщике');
+    }
   }
 }
 
