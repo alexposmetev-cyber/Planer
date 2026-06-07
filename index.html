@@ -347,21 +347,21 @@
     ];
 
     const DEFAULT_CATEGORIES = [
-      { id: 'food', name: 'Продукты питания', value: 25000 },
-      { id: 'utilities', name: 'Коммунальные расходы', value: 6000 },
-      { id: 'transport', name: 'Транспортные расходы', value: 2000 },
-      { id: 'carsharing', name: 'Каршеринг', value: 5000 },
-      { id: 'comms', name: 'Связь', value: 1700 },
-      { id: 'clothes', name: 'Одежда, обувь', value: 3000 },
-      { id: 'health', name: 'Лечение, лекарства', value: 1000 },
-      { id: 'fun', name: 'Развлечения', value: 10000 },
-      { id: 'gifts', name: 'Подарки, дни рождения', value: 4000 },
-      { id: 'lunch', name: 'Обеды на работе', value: 2000 },
-      { id: 'badHabits', name: 'Сигареты, алкоголь, кофе', value: 2000 },
-      { id: 'vacation_exp', name: 'Отпуск', value: 8000 },
-      { id: 'repair_exp', name: 'Ремонт', value: 4000 },
-      { id: 'furniture_exp', name: 'Мебель', value: 4000 },
-      { id: 'mortgagePay', name: 'ИПОТЕКА (текущий платёж)', value: 30000 },
+      { id: 'food', name: 'Продукты питания', value: 0 },
+      { id: 'utilities', name: 'Коммунальные расходы', value: 0 },
+      { id: 'transport', name: 'Транспортные расходы', value: 0 },
+      { id: 'carsharing', name: 'Каршеринг', value: 0 },
+      { id: 'comms', name: 'Связь', value: 0 },
+      { id: 'clothes', name: 'Одежда, обувь', value: 0 },
+      { id: 'health', name: 'Лечение, лекарства', value: 0 },
+      { id: 'fun', name: 'Развлечения', value: 0 },
+      { id: 'gifts', name: 'Подарки, дни рождения', value: 0 },
+      { id: 'lunch', name: 'Обеды на работе', value: 0 },
+      { id: 'badHabits', name: 'Сигареты, алкоголь, кофе', value: 0 },
+      { id: 'vacation_exp', name: 'Отпуск', value: 0 },
+      { id: 'repair_exp', name: 'Ремонт', value: 0 },
+      { id: 'furniture_exp', name: 'Мебель', value: 0 },
+      { id: 'mortgagePay', name: 'ИПОТЕКА (текущий платёж)', value: 0 },
     ];
 
     const DEFAULT_GOALS = [
@@ -595,6 +595,16 @@
         }
       }
       return row;
+    }
+
+    function expenseInputValue(value) {
+      return value > 0 ? value : '';
+    }
+
+    function parseExpenseInput(raw) {
+      if (raw === '' || raw === null || raw === undefined) return 0;
+      const n = parseFloat(raw);
+      return isNaN(n) ? 0 : Math.max(0, n);
     }
 
     function getTotalExpenses() {
@@ -1044,7 +1054,7 @@
       el.innerHTML = state.expenseCategories.map(c => `
         <div class="field-row">
           <div class="name"><input type="text" data-cat-name="${c.id}" value="${c.name}"></div>
-          <input type="number" data-cat-value="${c.id}" value="${c.value||0}" step="100">
+          <input type="number" data-cat-value="${c.id}" value="${expenseInputValue(c.value)}" step="100" placeholder="">
           <button type="button" class="secondary icon danger" data-cat-del="${c.id}">×</button>
         </div>`).join('');
 
@@ -1054,7 +1064,7 @@
       }));
       el.querySelectorAll('[data-cat-value]').forEach(inp => inp.addEventListener('input', () => {
         const cat = state.expenseCategories.find(c => c.id === inp.dataset.catValue);
-        if (cat) { cat.value = parseFloat(inp.value) || 0; render(); }
+        if (cat) { cat.value = parseExpenseInput(inp.value); render(); }
       }));
       el.querySelectorAll('[data-cat-del]').forEach(btn => btn.addEventListener('click', () => {
         if (state.expenseCategories.length <= 1) { alert('Нужна хотя бы одна категория'); return; }
